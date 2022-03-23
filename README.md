@@ -11,9 +11,9 @@ For reasoning behind this work, please see [this GitHub discussion](https://gith
 See [API reference](./REFERENCE.md) file for documentation.
 
 
-# Examples
+## Examples
 
-## Basic example
+### Basic example
 
 ```python
 from datetime import date
@@ -44,7 +44,7 @@ app = GraphQL(schema=schema, debug=True)
 ```
 
 
-## Dependency injection
+### Dependency injection
 
 If `__schema__` string contains other type, its definition should be provided via `__requires__` attribute:
 
@@ -100,7 +100,7 @@ app = GraphQL(schema=schema, debug=True)
 ```
 
 
-### Deferred dependencies
+#### Deferred dependencies
 
 Optionally dependencies can be declared as deferred so they can be provided directly to `make_executable_schema`:
 
@@ -154,9 +154,9 @@ app = GraphQL(schema=schema, debug=True)
 ```
 
 
-## Automatic case convertion between `python_world` and `clientWorld`
+### Automatic case convertion between `python_world` and `clientWorld`
 
-### Resolving fields values
+#### Resolving fields values
 
 Use `__aliases__ = convert_case` to automatically set aliases for fields that convert case
 
@@ -178,7 +178,7 @@ class UserType(ObjectType):
 ```
 
 
-### Converting fields arguments
+#### Converting fields arguments
 
 Use `__fields_args__ = convert_case` on type to automatically convert field arguments to python case in resolver kwargs:
 
@@ -208,7 +208,7 @@ class UserRegisterMutation(MutationType):
 ```
 
 
-### Converting inputs fields
+#### Converting inputs fields
 
 Use `__args__ = convert_case` on type to automatically convert input fields to python case in resolver kwargs:
 
@@ -250,7 +250,7 @@ class UserRegisterMutation(MutationType):
 ```
 
 
-## Roots merging
+### Roots merging
 
 `Query`, `Mutation` and `Subscription` types are automatically merged into one by `make_executable_schema`:
 
