@@ -27,6 +27,6 @@ jobs:
         pytest
     - name: Linters
       run: |
-        pylint ariadne_graphql_modules setup.py
+        pylint ariadne_graphql_modules tests setup.py
         mypy ariadne_graphql_modules --ignore-missing-imports
         black --check .
