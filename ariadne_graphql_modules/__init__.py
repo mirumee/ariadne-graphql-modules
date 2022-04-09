@@ -1,3 +1,6 @@
+from ariadne import gql
+
+from .base_type import BaseType
 from .convert_case import convert_case
 from .deferred_type import DeferredType
 from .directive_type import DirectiveType
@@ -13,6 +16,7 @@ from .union_type import UnionType
 from .utils import create_alias_resolver, parse_definition
 
 __all__ = [
+    "BaseType",
     "DeferredType",
     "DirectiveType",
     "EnumType",
@@ -25,6 +29,7 @@ __all__ = [
     "UnionType",
     "convert_case",
     "create_alias_resolver",
+    "gql",
     "make_executable_schema",
     "parse_definition",
 ]
