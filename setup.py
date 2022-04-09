@@ -27,7 +27,7 @@ setup(
     long_description=README,
     long_description_content_type="text/markdown",
     license="BSD",
-    version="0.2.0.dev1",
+    version="0.2.0.dev2",
     url="https://github.com/mirumee/ariadne-graphql-modules",
     packages=["ariadne_graphql_modules"],
     include_package_data=True,
