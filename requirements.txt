@@ -6,9 +6,9 @@
 #
 anyio==3.5.0
     # via starlette
-ariadne==0.15.0.dev4
+ariadne==0.15.0.dev5
     # via ariadne-graphql-modules (setup.py)
-graphql-core==3.2.0
+graphql-core==3.2.1
     # via ariadne
 idna==3.3
     # via anyio
