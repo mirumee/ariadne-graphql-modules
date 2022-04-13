@@ -306,10 +306,6 @@ Fields on final type will be ordered alphabetically.
 
 We are welcoming contributions to Ariadne! If you've found a bug or issue, feel free to use [GitHub issues](https://github.com/mirumee/ariadne/issues). If you have any questions or feedback, don't hesitate to catch us on [GitHub discussions](https://github.com/mirumee/ariadne/discussions/).
 
-For guidance and instructions, please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Website and the docs have their own GitHub repository: [mirumee/ariadne-website](https://github.com/mirumee/ariadne-website)
-
 Also make sure you follow [@AriadneGraphQL](https://twitter.com/AriadneGraphQL) on Twitter for latest updates, news and random musings!
 
 **Crafted with ❤️ by [Mirumee Software](http://mirumee.com)**

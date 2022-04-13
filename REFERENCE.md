@@ -1,3 +1,16 @@
+# API Reference
+
+- [ObjectType](#ObjectType)
+- [SubscriptionType](#SubscriptionType)
+- [InputType](#InputType)
+- [ScalarType](#ScalarType)
+- [InterfaceType](#InterfaceType)
+- [UnionType](#UnionType)
+- [DirectiveType](#DirectiveType)
+- [DeferredType](#DeferredType)
+- [BaseType](#BaseType)
+- [make_executable_schema](#make_executable_schema)
+- [convert_case](#convert_case)
 
 
 ## `ObjectType`
@@ -37,8 +50,6 @@ class QueryType(ObjectType):
     def resolve_year(_, info: GraphQLResolveInfo) -> int:
         return 2022
 ```
-
-> `ObjectType` could look up return type of `Int` scalar's `serialize` method and compare it with resolver's return type as extra safety net.
 
 If resolver function is not present for field, default resolver implemented by `graphql-core` will be used in its place.
 
@@ -80,8 +91,6 @@ class UserType(ObjectType):
 
         return None
 ```
-
-> `ObjectType` could raise error if resolver can't be matched to any field on type.
 
 
 ### `__requires__`
@@ -150,12 +159,13 @@ class ChatSubscriptions(SubscriptionType):
     """
     __requires__ = [ChatType]
 
-    async def resolve_chat(chat_id, *_):
-        return await get_chat_from_db(chat_id)
-
     async def subscribe_chat(*_):
         async for event in subscribe("chats"):
             yield event["chat_id"]
+
+    async def resolve_chat(chat_id, *_):
+        # Optional
+        return await get_chat_from_db(chat_id)
 ```
 
 
@@ -411,4 +421,281 @@ schema = make_executable_schema(
     ProductsQueriesType,
     merge_roots=False,
 )
+```
+
+## `DeferredType`
+
+`DeferredType` names required GraphQL type as provided at later time:
+
+- Via `make_executable_schema` call
+- Or via other type's `__requires__`
+
+It's mostly used to define lazy relationships in reusable modules and to break circular relationships.
+
+
+### Type with `DeferredType` and other type passed to `make_executable_schema`:
+
+```python
+class QueryType(ObjectType):
+    __schema__ = """
+    type Query {
+        id: ID!
+        users: [User!]!
+    }
+    """
+    __requires__ = [DeferredType("User")]
+
+
+class UserType(ObjectType):
+    __schema__ = """
+    type User {
+        id: ID!
+        dateJoined: String!
+    }
+    """
+
+
+schema = make_excutable_schema(QueryType, UserType)
+```
+
+
+### Type with `DeferredType` and other type passed as dependency of third type:
+
+```python
+class UsersGroupType(ObjectType):
+    __schema__ = """
+    type UsersGroup {
+        id: ID!
+        users: [User!]!
+    }
+    """
+    __requires__ = [UserType]
+
+
+class UserType(ObjectType):
+    __schema__ = """
+    type User {
+        id: ID!
+        dateJoined: String!
+    }
+    """
+
+
+class QueryType(ObjectType):
+    __schema__ = """
+    type Query {
+        id: ID!
+        users: [User!]!
+        groups: [UsersGroup!]!
+    }
+    """
+    __requires__ = [DeferredType("User"), UsersGroupType]
+
+
+schema = make_excutable_schema(QueryType)
+```
+
+
+## `BaseType`
+
+Base type that all other types extend. You can use it to create custom types:
+
+```python
+from typing import Dict
+
+from ariadne_graphql_modules import BaseType
+from django.db.models import Model
+from graphql import GraphQLFieldResolver
+
+class ModelType(BaseType)
+    __abstract__ = True
+    __schema__ = str
+    __model__ = Model
+
+    resolvers: Dict[str, GraphQLFieldResolver]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+
+        if cls.__dict__.get("__abstract__"):
+            return
+
+        cls.__abstract__ = False
+
+        if not cls.__model__:
+            raise ValueError(
+                f"{cls.__name__} was declared without required '__model__' attribute"
+            )
+
+        cls.__schema__ = cls.__create_schema_from_model__()
+        cls.resolvers = cls.__get_resolvers__()
+
+    @classmethod
+    def __create_schema_from_model__(cls) -> str:
+        ... # Your logic that creates GraphQL SDL from Django model
+
+    @classmethod
+    def __get_resolvers__(cls) -> Dict[str, GraphQLFieldResolver]:
+        ... # Your logic that creates resolvers map from model and cls
+
+    @classmethod
+    def __bind_to_schema__(cls, schema):
+        # Bind resolvers map to schema, called by `make_executable_schema`
+        graphql_type = schema.type_map.get(cls.graphql_name)
+
+        for field_name, field_resolver in cls.resolvers.items():
+            graphql_type.fields[field_name].resolve = field_resolver
+```
+
+
+## `make_executable_schema`
+
+```python
+def make_executable_schema(
+    *types: BaseType, 
+    merge_roots: bool = True,
+) -> GraphQLSchema:
+    ...
+```
+
+Utility function that takes args with types and creates executable schema.
+
+
+### `merge_roots: bool = True`
+
+If set to true (default), `make_executable_schema` will automatically merge multiple `Query`, `Mutation` and `Subscription` types instead of raising error.
+
+Final merged types fields will be ordered alphabetically:
+
+```python
+class YearType(ObjectType):
+    __schema__ = """
+        type Query {
+            year: Int!
+        }
+    """
+
+    @classmethod
+    def resolve_year(*_):
+        return 2022
+
+
+class MonthType(ObjectType):
+    __schema__ = """
+        type Query {
+            month: Int!
+        }
+    """
+
+    @classmethod
+    def resolve_month(*_):
+        return 10
+
+
+schema = make_executable_schema(YearType, MonthType)
+
+assert print_schema(schema) == """
+type Query {
+    month: Int!
+    year: Int!
+}
+"""
+```
+
+When `merge_roots=False` is explicitly set, `make_executable_schema` will raise an GraphQL error that `type Query` is defined more than once.
+
+
+## `convert_case`
+
+Utility function that can be used to automatically setup case conversion rules for types.
+
+
+#### Resolving fields values
+
+Use `__aliases__ = convert_case` to automatically set aliases for fields that convert case
+
+```python
+from ariadne_graphql_modules import ObjectType, convert_case, gql
+
+
+class UserType(ObjectType):
+    __schema__ = gql(
+        """
+        type User {
+            id: ID!
+            fullName: String!
+        }
+        """
+    )
+    __aliases__ = convert_case
+```
+
+
+#### Converting fields arguments
+
+Use `__fields_args__ = convert_case` on type to automatically convert field arguments to python case in resolver kwargs:
+
+```python
+from ariadne_graphql_modules import MutationType, convert_case, gql
+
+from my_app import create_user
+
+
+class UserRegisterMutation(MutationType):
+    __schema__ = gql(
+        """
+        type Mutation {
+            registerUser(fullName: String!, email: String!): Boolean!
+        }
+        """
+    )
+    __fields_args__ = convert_case
+
+    async def resolve_mutation(*_, full_name: str, email: str):
+        user = await create_user(
+            full_name=full_name,
+            email=email,
+        )
+        return bool(user)
+```
+
+
+#### Converting inputs fields
+
+Use `__args__ = convert_case` on type to automatically convert input fields to python case in resolver kwargs:
+
+```python
+from ariadne_graphql_modules import InputType, MutationType, convert_case, gql
+
+from my_app import create_user
+
+
+class UserRegisterInput(InputType):
+    __schema__ = gql(
+        """
+        input UserRegisterInput {
+            fullName: String!
+            email: String!
+        }
+        """
+    )
+    __args__ = convert_case
+
+
+class UserRegisterMutation(MutationType):
+    __schema__ = gql(
+        """
+        type Mutation {
+            registerUser(input: UserRegisterInput!): Boolean!
+        }
+        """
+    )
+    __requires__ = [UserRegisterInput]
+
+    async def resolve_mutation(*_, input: dict):
+        user = await create_user(
+            full_name=input["full_name"],
+            email=input["email"],
+        )
+        return bool(user)
 ```
