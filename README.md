@@ -1,5 +1,7 @@
 [![Ariadne](https://ariadnegraphql.org/img/logo-horizontal-sm.png)](https://ariadnegraphql.org)
 
+[![Build Status](https://github.com/mirumee/ariadne-graphql-modules/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mirumee/ariadne-graphql-modules/actions)
+
 - - - - -
 
 # Ariadne GraphQL Modules
