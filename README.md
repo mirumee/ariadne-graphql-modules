@@ -13,6 +13,17 @@ For reasoning behind this work, please see [this GitHub discussion](https://gith
 See [API reference](./REFERENCE.md) file for documentation.
 
 
+## Installation
+
+Ariadne GraphQL Modules can be installed using pip:
+
+```console
+pip install ariadne-graphql-modules
+```
+
+Ariadne 0.15 or later is required for library to work.
+
+
 ## Examples
 
 ### Basic example
@@ -316,7 +327,7 @@ Fields on final type will be ordered alphabetically.
 
 ## Contributing
 
-We are welcoming contributions to Ariadne! If you've found a bug or issue, feel free to use [GitHub issues](https://github.com/mirumee/ariadne/issues). If you have any questions or feedback, don't hesitate to catch us on [GitHub discussions](https://github.com/mirumee/ariadne/discussions/).
+We are welcoming contributions to Ariadne GraphQL Modules! If you've found a bug or issue, feel free to use [GitHub issues](https://github.com/mirumee/ariadne/issues). If you have any questions or feedback, please let us know via [GitHub discussions](https://github.com/mirumee/ariadne/discussions/).
 
 Also make sure you follow [@AriadneGraphQL](https://twitter.com/AriadneGraphQL) on Twitter for latest updates, news and random musings!
 
