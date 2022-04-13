@@ -159,10 +159,12 @@ class ChatSubscriptions(SubscriptionType):
     """
     __requires__ = [ChatType]
 
+    @staticmethod
     async def subscribe_chat(*_):
         async for event in subscribe("chats"):
             yield event["chat_id"]
 
+    @staticmethod
     async def resolve_chat(chat_id, *_):
         # Optional
         return await get_chat_from_db(chat_id)
@@ -575,7 +577,7 @@ class YearType(ObjectType):
         }
     """
 
-    @classmethod
+    @staticmethod
     def resolve_year(*_):
         return 2022
 
@@ -587,7 +589,7 @@ class MonthType(ObjectType):
         }
     """
 
-    @classmethod
+    @staticmethod
     def resolve_month(*_):
         return 10
 
@@ -651,6 +653,7 @@ class UserRegisterMutation(MutationType):
     )
     __fields_args__ = convert_case
 
+    @staticmethod
     async def resolve_mutation(*_, full_name: str, email: str):
         user = await create_user(
             full_name=full_name,
@@ -692,6 +695,7 @@ class UserRegisterMutation(MutationType):
     )
     __requires__ = [UserRegisterInput]
 
+    @staticmethod
     async def resolve_mutation(*_, input: dict):
         user = await create_user(
             full_name=input["full_name"],

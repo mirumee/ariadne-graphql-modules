@@ -34,9 +34,11 @@ class Query(ObjectType):
         """
     )
 
+    @staticmethod
     def resolve_message(*_):
         return "Hello world!"
 
+    @staticmethod
     def resolve_year(*_):
         return date.today().year
 
@@ -70,6 +72,7 @@ class UserType(ObjectType):
         """
     )
 
+    @staticmethod
     def resolve_email(user: User, info):
         if info.context["is_admin"]:
             return user.email
@@ -88,9 +91,11 @@ class UsersQueries(ObjectType):
     )
     __requires__ = [UserType]
 
+    @staticmethod
     def resolve_user(*_, id: string) -> Optional[User]:
         return get_user(id=id)
 
+    @staticmethod
     def resolve_users(*_, id: string) -> List[User]:
         return get_last_users()
 
@@ -126,6 +131,7 @@ class UserType(ObjectType):
         """
     )
 
+    @staticmethod
     def resolve_email(user: User, info):
         if info.context["is_admin"]:
             return user.email
@@ -144,9 +150,11 @@ class UsersQueries(ObjectType):
     )
     __requires__ = [DeferredType("User")]
 
+    @staticmethod
     def resolve_user(*_, id: string) -> Optional[User]:
         return get_user(id=id)
 
+    @staticmethod
     def resolve_users(*_, id: string) -> List[User]:
         return get_last_users()
 
@@ -199,6 +207,7 @@ class UserRegisterMutation(MutationType):
     )
     __fields_args__ = convert_case
 
+    @staticmethod
     async def resolve_mutation(*_, full_name: str, email: str):
         user = await create_user(
             full_name=full_name,
@@ -240,6 +249,7 @@ class UserRegisterMutation(MutationType):
     )
     __requires__ = [UserRegisterInput]
 
+    @staticmethod
     async def resolve_mutation(*_, input: dict):
         user = await create_user(
             full_name=input["full_name"],
@@ -269,6 +279,7 @@ class YearQuery(ObjectType):
         """
     )
 
+    @staticmethod
     def resolve_year(*_):
         return date.today().year
 
@@ -282,6 +293,7 @@ class MessageQuery(ObjectType):
         """
     )
 
+    @staticmethod
     def resolve_message(*_):
         return "Hello world!"
 
