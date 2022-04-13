@@ -18,8 +18,8 @@ See [API reference](./REFERENCE.md) file for documentation.
 ```python
 from datetime import date
 
-from ariadne.asgi import GraphQL, gql
-from ariadne_graphql_modules import ObjectType, make_executable_schema
+from ariadne.asgi import GraphQL
+from ariadne_graphql_modules import ObjectType, gql, make_executable_schema
 
 
 class Query(ObjectType):
@@ -51,8 +51,8 @@ If `__schema__` string contains other type, its definition should be provided vi
 ```python
 from typing import List, Optional
 
-from ariadne.asgi import GraphQL, gql
-from ariadne_graphql_modules import ObjectType, make_executable_schema
+from ariadne.asgi import GraphQL
+from ariadne_graphql_modules import ObjectType, gql, make_executable_schema
 
 from my_app.users import User, get_user, get_last_users
 
@@ -107,8 +107,8 @@ Optionally dependencies can be declared as deferred so they can be provided dire
 ```python
 from typing import List, Optional
 
-from ariadne.asgi import GraphQL, gql
-from ariadne_graphql_modules import DeferredType, ObjectType, make_executable_schema
+from ariadne.asgi import GraphQL
+from ariadne_graphql_modules import DeferredType, ObjectType, gql, make_executable_schema
 
 from my_app.users import User, get_user, get_last_users
 
@@ -161,8 +161,7 @@ app = GraphQL(schema=schema, debug=True)
 Use `__aliases__ = convert_case` to automatically set aliases for fields that convert case
 
 ```python
-from ariadne.asgi import gql
-from ariadne_graphql_modules import ObjectType, convert_case
+from ariadne_graphql_modules import ObjectType, convert_case, gql
 
 
 class UserType(ObjectType):
@@ -183,8 +182,7 @@ class UserType(ObjectType):
 Use `__fields_args__ = convert_case` on type to automatically convert field arguments to python case in resolver kwargs:
 
 ```python
-from ariadne.asgi import gql
-from ariadne_graphql_modules import MutationType, convert_case
+from ariadne_graphql_modules import MutationType, convert_case, gql
 
 from my_app import create_user
 
@@ -213,8 +211,7 @@ class UserRegisterMutation(MutationType):
 Use `__args__ = convert_case` on type to automatically convert input fields to python case in resolver kwargs:
 
 ```python
-from ariadne.asgi import gql
-from ariadne_graphql_modules import InputType, MutationType, convert_case
+from ariadne_graphql_modules import InputType, MutationType, convert_case, gql
 
 from my_app import create_user
 
@@ -257,8 +254,8 @@ class UserRegisterMutation(MutationType):
 ```python
 from datetime import date
 
-from ariadne.asgi import GraphQL, gql
-from ariadne_graphql_modules import ObjectType, make_executable_schema
+from ariadne.asgi import GraphQL
+from ariadne_graphql_modules import ObjectType, gql, make_executable_schema
 
 
 class YearQuery(ObjectType):
