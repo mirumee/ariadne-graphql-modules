@@ -4,6 +4,7 @@
 - [SubscriptionType](#SubscriptionType)
 - [InputType](#InputType)
 - [ScalarType](#ScalarType)
+- [EnumType](#EnumType)
 - [InterfaceType](#InterfaceType)
 - [UnionType](#UnionType)
 - [DirectiveType](#DirectiveType)
@@ -259,9 +260,64 @@ class DateScalar(Scalar):
 If you won't define `parse_literal`, GraphQL will use custom logic that will unpack value from AST and then call `parse_value` on it.
 
 
+## `EnumType`
+
+Defines enum in GraphQL schema:
+
+```python
+class UserRoleEnum(EnumType):
+    __schema__ = """
+    enum UserRole {
+        USER
+        MOD
+        ADMIN
+    }
+    """
+```
+
+`__enum__` attribute allows you to specify Python enum to represent GraphQL enum in your Python logic:
+
+```python
+class UserRole(IntEnum):
+    USER = 0
+    MOD = 1
+    ADMIN = 1
+
+
+class UserRoleEnum(EnumType):
+    __schema__ = """
+    enum UserRole {
+        USER
+        MOD
+        ADMIN
+    }
+    """
+    __enum__ = UserRole
+```
+
+You can also make `__enum__` a dict to skip enum if you want:
+
+
+```python
+class UserRoleEnum(EnumType):
+    __schema__ = """
+    enum UserRole {
+        USER
+        MOD
+        ADMIN
+    }
+    """
+    __enum__ = {
+        "USER": 0,
+        "MOD": 1,
+        "ADMIN": 2,
+    }
+```
+
+
 ## `InterfaceType`
 
-Defines intefrace in GraphQL schema:
+Defines interface in GraphQL schema:
 
 ```python
 class SearchResultInterface(InterfaceType):
