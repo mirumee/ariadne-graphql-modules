@@ -297,7 +297,6 @@ class UserRoleEnum(EnumType):
 
 You can also make `__enum__` a dict to skip enum if you want:
 
-
 ```python
 class UserRoleEnum(EnumType):
     __schema__ = """
