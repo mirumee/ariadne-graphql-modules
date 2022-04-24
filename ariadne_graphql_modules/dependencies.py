@@ -17,7 +17,7 @@ from graphql import (
 
 from .utils import unwrap_type_node
 
-GRAPHQL_TYPES = ("ID", "Int", "String", "Boolean")
+GRAPHQL_TYPES = ("ID", "Int", "String", "Boolean", "Float")
 
 Dependencies = Tuple[str, ...]
 
