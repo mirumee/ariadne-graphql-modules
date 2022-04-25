@@ -82,6 +82,20 @@ def test_object_type_extracts_graphql_name():
     assert GroupType.graphql_name == "Group"
 
 
+def test_object_type_accepts_all_builtin_scalar_types():
+    # pylint: disable=unused-variable
+    class FancyObjectType(ObjectType):
+        __schema__ = """
+        type FancyObject {
+            id: ID!
+            someInt: Int!
+            someFloat: Float!
+            someBoolean: Boolean!
+            someString: String!
+        }
+        """
+
+
 def test_object_type_raises_error_when_defined_without_return_type_dependency(snapshot):
     with pytest.raises(ValueError) as err:
         # pylint: disable=unused-variable
