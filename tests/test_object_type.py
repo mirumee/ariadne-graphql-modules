@@ -83,6 +83,7 @@ def test_object_type_extracts_graphql_name():
 
 
 def test_object_type_accepts_all_builtin_scalar_types():
+    # pylint: disable=unused-variable
     class FancyObjectType(ObjectType):
         __schema__ = """
         type FancyObject {
