@@ -9,7 +9,10 @@
 - [UnionType](#UnionType)
 - [DirectiveType](#DirectiveType)
 - [DeferredType](#DeferredType)
+- [CollectionType](#CollectionType)
 - [BaseType](#BaseType)
+- [DefinitionType](#DefinitionType)
+- [BindableType](#BindableType)
 - [make_executable_schema](#make_executable_schema)
 - [convert_case](#convert_case)
 
@@ -553,6 +556,25 @@ schema = make_excutable_schema(QueryType)
 ```
 
 
+## `CollectionType`
+
+Collection is an utility type that gathers multiple types into single object:
+
+```python
+class UserMutations(CollectionType):
+    __types__ = [
+        BanUserMutation,
+        UnbanUserMutation,
+        CreateUserMutation,
+        UpdateUserMutation,
+        DeleteUserMutation,
+    ]
+
+
+schema = make_excutable_schema(UserMutations)
+```
+
+
 ## `BaseType`
 
 Base type that all other types extend. You can use it to create custom types:
@@ -564,45 +586,53 @@ from ariadne_graphql_modules import BaseType
 from django.db.models import Model
 from graphql import GraphQLFieldResolver
 
-class ModelType(BaseType)
+class MyType(BaseType)
     __abstract__ = True
-    __schema__ = str
-    __model__ = Model
-
-    resolvers: Dict[str, GraphQLFieldResolver]
-
-    def __init_subclass__(cls) -> None:
-        super().__init_subclass__()
-
-        if cls.__dict__.get("__abstract__"):
-            return
-
-        cls.__abstract__ = False
-
-        if not cls.__model__:
-            raise ValueError(
-                f"{cls.__name__} was declared without required '__model__' attribute"
-            )
-
-        cls.__schema__ = cls.__create_schema_from_model__()
-        cls.resolvers = cls.__get_resolvers__()
 
     @classmethod
-    def __create_schema_from_model__(cls) -> str:
-        ... # Your logic that creates GraphQL SDL from Django model
-
-    @classmethod
-    def __get_resolvers__(cls) -> Dict[str, GraphQLFieldResolver]:
-        ... # Your logic that creates resolvers map from model and cls
-
-    @classmethod
-    def __bind_to_schema__(cls, schema):
-        # Bind resolvers map to schema, called by `make_executable_schema`
-        graphql_type = schema.type_map.get(cls.graphql_name)
-
-        for field_name, field_resolver in cls.resolvers.items():
-            graphql_type.fields[field_name].resolve = field_resolver
+    def __get_types__(cls) -> List[Type["BaseType"]]:
+        # Called by make_executable_schema to get list of types
+        # to build GraphQL schema from.
+        return []
 ```
+
+
+## `DefinitionType`
+
+Base for types that define `__schema__`:
+
+```python
+class MyType(DefinitionType)
+    __abstract__: bool = True
+    __schema__: str
+    __requires__: List[Union[Type["DefinitionType"], DeferredType]] = []
+
+    graphql_name: str
+    graphql_type: Type[DefinitionNode]
+```
+
+Extends `BaseType`.
+
+
+## `BindableType`
+
+Base for types that define `__bind_to_schema__` class method:
+
+```python
+class MyType(BindableType)
+    __abstract__: bool = True
+    __schema__: str
+    __requires__: List[Union[Type["DefinitionType"], DeferredType]] = []
+
+    graphql_name: str
+    graphql_type: Type[DefinitionNode]
+
+    @classmethod
+    def __bind_to_schema__(cls, schema: GraphQLSchema):
+        pass  # Bind python logic to GraphQL schema here
+```
+
+Extends `DefinitionType`.
 
 
 ## `make_executable_schema`

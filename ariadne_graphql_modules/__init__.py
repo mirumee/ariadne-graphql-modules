@@ -1,8 +1,8 @@
 from ariadne import gql
 
-from .base_type import BaseType
+from .bases import BaseType, BindableType, DeferredType, DefinitionType
+from .collection_type import CollectionType
 from .convert_case import convert_case
-from .deferred_type import DeferredType
 from .directive_type import DirectiveType
 from .enum_type import EnumType
 from .executable_schema import make_executable_schema
@@ -17,7 +17,10 @@ from .utils import create_alias_resolver, parse_definition
 
 __all__ = [
     "BaseType",
+    "BindableType",
+    "CollectionType",
     "DeferredType",
+    "DefinitionType",
     "DirectiveType",
     "EnumType",
     "InputType",

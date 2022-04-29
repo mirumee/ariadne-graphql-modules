@@ -6,11 +6,11 @@ from graphql import (
     DirectiveDefinitionNode,
 )
 
-from .base_type import BaseType
+from .bases import DefinitionType
 from .utils import parse_definition
 
 
-class DirectiveType(BaseType):
+class DirectiveType(DefinitionType):
     __abstract__ = True
     __visitor__: Type[SchemaDirectiveVisitor]
 
@@ -47,7 +47,3 @@ class DirectiveType(BaseType):
             raise AttributeError(
                 f"{cls.__name__} class was defined without __visitor__ attribute"
             )
-
-    @staticmethod
-    def __bind_to_schema__(*_):
-        pass  # Binding directive to schema is noop
