@@ -5,7 +5,7 @@ from graphql import DefinitionNode, GraphQLSchema, ObjectTypeDefinitionNode
 from .dependencies import Dependencies
 from .types import RequirementsDict
 
-__all__ = ["BaseType", "BindableType", "DefinitionType"]
+__all__ = ["BaseType", "BindableType", "DeferredType", "DefinitionType"]
 
 
 class BaseType:
