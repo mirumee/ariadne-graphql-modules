@@ -9,14 +9,14 @@ from graphql import (
     EnumTypeExtensionNode,
 )
 
-from .base_type import BaseType
+from .bases import BindableType
 from .types import RequirementsDict
 from .utils import parse_definition
 
 EnumNodeType = Union[EnumTypeDefinitionNode, EnumTypeExtensionNode]
 
 
-class EnumType(BaseType):
+class EnumType(BindableType):
     __abstract__ = True
     __enum__: Optional[Union[Type[Enum], dict]] = None
 

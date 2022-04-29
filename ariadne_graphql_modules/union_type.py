@@ -9,7 +9,7 @@ from graphql import (
     UnionTypeExtensionNode,
 )
 
-from .base_type import BaseType
+from .bases import BindableType
 from .dependencies import Dependencies, get_dependencies_from_union_type
 from .types import RequirementsDict
 from .utils import parse_definition
@@ -17,7 +17,7 @@ from .utils import parse_definition
 UnionNodeType = Union[UnionTypeDefinitionNode, UnionTypeExtensionNode]
 
 
-class UnionType(BaseType):
+class UnionType(BindableType):
     __abstract__ = True
 
     graphql_type: Union[Type[UnionTypeDefinitionNode], Type[UnionTypeExtensionNode]]

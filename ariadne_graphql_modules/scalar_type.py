@@ -11,14 +11,14 @@ from graphql import (
     ScalarTypeExtensionNode,
 )
 
-from .base_type import BaseType
+from .bases import BindableType
 from .types import RequirementsDict
 from .utils import parse_definition
 
 ScalarNodeType = Union[ScalarTypeDefinitionNode, ScalarTypeExtensionNode]
 
 
-class ScalarType(BaseType):
+class ScalarType(BindableType):
     __abstract__ = True
 
     graphql_type: Union[Type[ScalarTypeDefinitionNode], Type[ScalarTypeExtensionNode]]

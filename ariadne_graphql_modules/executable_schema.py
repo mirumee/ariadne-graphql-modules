@@ -19,8 +19,7 @@ from graphql import (
 )
 from graphql.language import ast
 
-from .base_type import BaseType
-from .deferred_type import DeferredType
+from .bases import BaseType, BindableType, DeferredType, DefinitionType
 from .enum_type import EnumType
 
 ROOT_TYPES = ["Query", "Mutation", "Subscription"]
@@ -30,43 +29,45 @@ def make_executable_schema(
     *types,
     merge_roots: bool = True,
 ):
-    all_types: List[Type[BaseType]] = []
-    find_requirements(all_types, types)
+    all_types = get_all_types(types)
 
-    real_types = [type_ for type_ in all_types if not isinstance(type_, DeferredType)]
-    validate_no_missing_types(real_types, all_types)
+    type_defs: List[Type[DefinitionType]] = []
+    for type_ in all_types:
+        if issubclass(type_, DefinitionType):
+            type_defs.append(type_)
 
-    schema = build_schema(real_types, merge_roots)
+    validate_no_missing_definitions(all_types, type_defs)
+
+    schema = build_schema(type_defs, merge_roots)
     set_default_enum_values_on_schema(schema)
     assert_valid_schema(schema)
     validate_schema_enum_values(schema)
-    repair_default_enum_values(schema, real_types)
+    repair_default_enum_values(schema, type_defs)
 
-    add_directives_to_schema(schema, real_types)
+    add_directives_to_schema(schema, type_defs)
 
     return schema
 
 
-def find_requirements(
-    types_list: List[Type[BaseType]], types: Iterable[Type[BaseType]]
+def get_all_types(types: Iterable[Type[BaseType]]) -> List[Type[BaseType]]:
+    all_types: List[Type[BaseType]] = []
+    for leaf_type in types:
+        for child_type in leaf_type.__get_types__():
+            if child_type not in all_types:
+                all_types.append(child_type)
+    return all_types
+
+
+def validate_no_missing_definitions(
+    all_types: List[Type[BaseType]],
+    type_defs: List[Type[DefinitionType]],
 ):
-    for type_ in types:
-        if type_ not in types_list:
-            types_list.append(type_)
+    deferred_names: List[str] = []
+    for type_ in all_types:
+        if isinstance(type_, DeferredType):
+            deferred_names.append(type_.graphql_name)
 
-        find_requirements(types_list, type_.__requires__)
-
-
-def validate_no_missing_types(
-    real_types: List[Type[BaseType]], all_types: List[Type[BaseType]]
-):
-    deferred_names = [
-        deferred.graphql_name
-        for deferred in all_types
-        if isinstance(deferred, DeferredType)
-    ]
-
-    real_names = [type_.graphql_name for type_ in real_types]
+    real_names = [type_.graphql_name for type_ in type_defs]
     missing_names = set(deferred_names) - set(real_names)
     if missing_names:
         raise ValueError(
@@ -76,51 +77,52 @@ def validate_no_missing_types(
 
 
 def build_schema(
-    types_list: List[Type[BaseType]], merge_roots: bool = True
+    type_defs: List[Type[DefinitionType]], merge_roots: bool = True
 ) -> GraphQLSchema:
     schema_definitions: List[ast.DocumentNode] = []
     if merge_roots:
-        schema_definitions.append(build_root_schema(types_list))
-        for type_ in types_list:
+        schema_definitions.append(build_root_schema(type_defs))
+        for type_ in type_defs:
             if type_.graphql_name not in ROOT_TYPES or not merge_roots:
                 schema_definitions.append(parse(type_.__schema__))
 
     ast_document = concat_ast(schema_definitions)
     schema = build_ast_schema(ast_document)
 
-    for type_ in types_list:
-        type_.__bind_to_schema__(schema)
+    for type_ in type_defs:
+        if issubclass(type_, BindableType):
+            type_.__bind_to_schema__(schema)
 
     return schema
 
 
-def build_root_schema(types_list: List[Type[BaseType]]) -> DocumentNode:
-    root_types: Dict[str, List[Type[BaseType]]] = {
+def build_root_schema(type_defs: List[Type[DefinitionType]]) -> DocumentNode:
+    root_types: Dict[str, List[Type[DefinitionType]]] = {
         "Query": [],
         "Mutation": [],
         "Subscription": [],
     }
 
-    for type_ in types_list:
-        if type_.graphql_name in root_types:
-            root_types[type_.graphql_name].append(type_)
+    for type_def in type_defs:
+        if type_def.graphql_name in root_types:
+            root_types[type_def.graphql_name].append(type_def)
 
     schema: List[DocumentNode] = []
-    for types_defs in root_types.values():
-        if len(types_defs) == 1:
-            schema.append(parse(types_defs[0].__schema__))
-        elif types_defs:
-            schema.append(merge_root_types(types_defs))
+    for root_type_defs in root_types.values():
+        if len(root_type_defs) == 1:
+            schema.append(parse(root_type_defs[0].__schema__))
+        elif root_type_defs:
+            schema.append(merge_root_types(root_type_defs))
 
     return concat_ast(schema)
 
 
-def merge_root_types(types_list: List[Type[BaseType]]) -> DocumentNode:
+def merge_root_types(type_defs: List[Type[DefinitionType]]) -> DocumentNode:
     interfaces: List[NamedTypeNode] = []
     directives: List[ConstDirectiveNode] = []
-    fields: Dict[str, Tuple[FieldDefinitionNode, Type[BaseType]]] = {}
+    fields: Dict[str, Tuple[FieldDefinitionNode, Type[DefinitionType]]] = {}
 
-    for type_ in types_list:
+    for type_ in type_defs:
         type_definition = cast(
             ObjectTypeDefinitionNode,
             parse(type_.__schema__).definitions[0],
@@ -141,7 +143,7 @@ def merge_root_types(types_list: List[Type[BaseType]]) -> DocumentNode:
 
     merged_definition = ast.ObjectTypeDefinitionNode()
     merged_definition.name = ast.NameNode()
-    merged_definition.name.value = types_list[0].graphql_name
+    merged_definition.name.value = type_defs[0].graphql_name
     merged_definition.interfaces = tuple(interfaces)
     merged_definition.directives = tuple(directives)
     merged_definition.fields = tuple(
@@ -154,18 +156,20 @@ def merge_root_types(types_list: List[Type[BaseType]]) -> DocumentNode:
     return merged_document
 
 
-def add_directives_to_schema(schema: GraphQLSchema, types_list: List[Type[BaseType]]):
+def add_directives_to_schema(
+    schema: GraphQLSchema, type_defs: List[Type[DefinitionType]]
+):
     directives: Dict[str, Type[SchemaDirectiveVisitor]] = {}
-    for type_ in types_list:
-        visitor = getattr(type_, "__visitor__", None)
+    for type_def in type_defs:
+        visitor = getattr(type_def, "__visitor__", None)
         if visitor and issubclass(visitor, SchemaDirectiveVisitor):
-            directives[type_.graphql_name] = visitor
+            directives[type_def.graphql_name] = visitor
 
     if directives:
         SchemaDirectiveVisitor.visit_schema_directives(schema, directives)
 
 
-def repair_default_enum_values(schema, types_list: List[Type[BaseType]]) -> None:
+def repair_default_enum_values(schema, types_list: List[Type[DefinitionType]]) -> None:
     for type_ in types_list:
         if issubclass(type_, EnumType):
             type_.__bind_to_default_values__(schema)

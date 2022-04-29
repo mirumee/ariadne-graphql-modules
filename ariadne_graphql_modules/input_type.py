@@ -6,7 +6,7 @@ from graphql import (
     InputObjectTypeExtensionNode,
 )
 
-from .base_type import BaseType
+from .bases import BindableType
 from .dependencies import Dependencies, get_dependencies_from_input_type
 from .types import InputFieldsDict, RequirementsDict
 from .utils import parse_definition
@@ -15,7 +15,7 @@ Args = Dict[str, str]
 InputNodeType = Union[InputObjectTypeDefinitionNode, InputObjectTypeExtensionNode]
 
 
-class InputType(BaseType):
+class InputType(BindableType):
     __abstract__ = True
     __args__: Optional[Union[Args, Callable[..., Args]]] = None
 

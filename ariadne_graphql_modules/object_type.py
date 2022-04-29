@@ -7,7 +7,7 @@ from graphql import (
     ObjectTypeExtensionNode,
 )
 
-from .base_type import BaseType
+from .bases import BindableType
 from .dependencies import Dependencies, get_dependencies_from_object_type
 from .resolvers_mixin import ResolversMixin
 from .types import FieldsDict, RequirementsDict
@@ -16,7 +16,7 @@ from .utils import parse_definition
 ObjectNodeType = Union[ObjectTypeDefinitionNode, ObjectTypeExtensionNode]
 
 
-class ObjectType(BaseType, ResolversMixin):
+class ObjectType(BindableType, ResolversMixin):
     __abstract__ = True
 
     graphql_name: str
