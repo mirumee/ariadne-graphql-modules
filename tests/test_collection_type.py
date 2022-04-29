@@ -62,7 +62,6 @@ def test_collection_types_can_be_queries():
             },
         },
     )
-    print(result)
     assert result.data == {
         "user": {
             "id": "1",
