@@ -1,9 +1,9 @@
 # CHANGELOG
 
-## 0.4.0 (unreleased)
+## 0.4.0 (2022-05-04)
 
-- Add `DefinitionType` and `BindableType` bases on top of `BaseType`.
-- Add `CollectionType` utility type for gather types into single type.
+- Split logic from `BaseType` into `DefinitionType` and `BindableType`.
+- Add `CollectionType` utility type for gathering types into single type.
 
 
 ## 0.3.0 (2022-04-25)
