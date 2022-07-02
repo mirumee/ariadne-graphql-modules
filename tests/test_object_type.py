@@ -345,12 +345,15 @@ class QueryType(ObjectType):
         other: String!
         firstField: String!
         secondField: String!
+        fieldWithArg(someArg: String): String!
     }
     """
     __aliases__ = {
         "firstField": "first_field",
         "secondField": "second_field",
+        "fieldWithArg": "field_with_arg",
     }
+    __fields_args__ = {"fieldWithArg": {"someArg": "some_arg"}}
 
     @staticmethod
     def resolve_other(*_):
@@ -359,6 +362,10 @@ class QueryType(ObjectType):
     @staticmethod
     def resolve_second_field(obj, *_):
         return "Obj: %s" % obj["secondField"]
+
+    @staticmethod
+    def resolve_field_with_arg(obj, *_, some_arg):
+        return "Arg: %s" % some_arg
 
 
 schema = make_executable_schema(QueryType)
@@ -384,3 +391,8 @@ def test_object_resolves_field_with_aliased_default_resolver():
 def test_object_resolves_field_with_aliased_custom_resolver():
     result = graphql_sync(schema, "{ secondField }", root_value={"secondField": "Hey!"})
     assert result.data["secondField"] == "Obj: Hey!"
+
+
+def test_object_resolves_field_with_arg_out_name_customized():
+    result = graphql_sync(schema, '{ fieldWithArg(someArg: "test") }')
+    assert result.data["fieldWithArg"] == "Arg: test"

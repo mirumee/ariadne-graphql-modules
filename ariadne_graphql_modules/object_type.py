@@ -118,3 +118,9 @@ class ObjectType(BindableType, ResolversMixin):
 
         for field_name, field_resolver in cls.resolvers.items():
             graphql_type.fields[field_name].resolve = field_resolver
+
+        if cls.__fields_args__:
+            for field_name, field_args_mappings in cls.__fields_args__.items():
+                field_args = graphql_type.fields[field_name].args
+                for arg_name, arg_out_name in field_args_mappings.items():
+                    field_args[arg_name].out_name = arg_out_name
