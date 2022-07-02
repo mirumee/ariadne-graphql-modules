@@ -364,8 +364,8 @@ class QueryType(ObjectType):
         return "Obj: %s" % obj["secondField"]
 
     @staticmethod
-    def resolve_field_with_arg(obj, *_, some_arg):
-        return "Arg: %s" % some_arg
+    def resolve_field_with_arg(*_, some_arg):
+        return some_arg
 
 
 schema = make_executable_schema(QueryType)
@@ -395,4 +395,4 @@ def test_object_resolves_field_with_aliased_custom_resolver():
 
 def test_object_resolves_field_with_arg_out_name_customized():
     result = graphql_sync(schema, '{ fieldWithArg(someArg: "test") }')
-    assert result.data["fieldWithArg"] == "Arg: test"
+    assert result.data["fieldWithArg"] == "test"
