@@ -151,12 +151,44 @@ class UsersGroupType(ObjectType):
 `DeferredType` makes `UserType` happy about `UsersGroup` dependency, deferring dependency check to `make_executable_schema`. If "real" `UsersGroup` is not provided at that time, error will be raised about missing types required to create schema.
 
 
+### `__fields_args__`
+
+Optional attribute that can be used to specify custom mappings between GraphQL args and Python kwargs:
+
+```python
+from ariadne_graphql_modules import DeferredType, ObjectType, gql
+
+from my_app.models import Article
+
+
+class SearchQuery(ObjectType):
+    __schema__ = gql(
+        """
+        type Query {
+            search(query: String!, includeDrafts: Boolean): [Article!]!
+        }
+        """
+    )
+    __fields_args__ = {
+        "includeDrafts": "with_drafts",
+    }
+    __requires__ = [DeferredType("Article")]
+
+    @staticmethod
+    async def resolve_search(*_, query: str, with_drafts: bool | None):
+        articles = Article.query.search(query)
+        if not with_drafts:
+            articles = articles.filter(is_draft=False)
+        return await articles.all()
+```
+
+
 ## `MutationType`
 
 Convenience type for defining single mutation:
 
 ```python
-from ariadne_graphql_modules import MutationType, convert_case, gql
+from ariadne_graphql_modules import MutationType, gql
 
 from my_app import create_user
 
@@ -182,7 +214,7 @@ class UserRegisterMutation(MutationType):
 Recommended use for this type is to create custom base class for your GraphQL API:
 
 ```python
-from ariadne_graphql_modules import MutationType, convert_case, gql
+from ariadne_graphql_modules import MutationType, gql
 
 
 class BaseMutation(MutationType):
@@ -206,7 +238,7 @@ class BaseMutation(MutationType):
 Optional attribute that can be used to specify custom mapping between GraphQL schema and Python:
 
 ```python
-from ariadne_graphql_modules import MutationType, convert_case, gql
+from ariadne_graphql_modules import MutationType, gql
 
 from my_app import create_user
 
