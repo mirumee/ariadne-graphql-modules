@@ -1,6 +1,7 @@
 # API Reference
 
 - [ObjectType](#ObjectType)
+- [MutationType](#MutationType)
 - [SubscriptionType](#SubscriptionType)
 - [InputType](#InputType)
 - [ScalarType](#ScalarType)
@@ -148,6 +149,91 @@ class UsersGroupType(ObjectType):
 ```
 
 `DeferredType` makes `UserType` happy about `UsersGroup` dependency, deferring dependency check to `make_executable_schema`. If "real" `UsersGroup` is not provided at that time, error will be raised about missing types required to create schema.
+
+
+## `MutationType`
+
+Convenience type for defining single mutation:
+
+```python
+from ariadne_graphql_modules import MutationType, convert_case, gql
+
+from my_app import create_user
+
+
+class UserRegisterMutation(MutationType):
+    __schema__ = gql(
+        """
+        type Mutation {
+            registerUser(username: String!, email: String!): Boolean!
+        }
+        """
+    )
+
+    @staticmethod
+    async def resolve_mutation(*_, username: str, email: str):
+        user = await create_user(
+            full_name=username,
+            email=email,
+        )
+        return bool(user)
+```
+
+Recommended use for this type is to create custom base class for your GraphQL API:
+
+```python
+from ariadne_graphql_modules import MutationType, convert_case, gql
+
+
+class BaseMutation(MutationType):
+    __abstract__ = True
+
+    @classmethod
+    async def resolve_mutation(cls, _, *args, **kwargs):
+        try:
+            return await cls.perform_mutation(cls, *args, **kwargs)
+        except Exception as e:
+            return {"errors": e}
+
+    @classmethod
+    def get_error_result(cls, error):
+            return {"errors": [e]}
+```
+
+
+### `__args__`
+
+Optional attribute that can be used to specify custom mapping between GraphQL schema and Python:
+
+```python
+from ariadne_graphql_modules import MutationType, convert_case, gql
+
+from my_app import create_user
+
+
+class UserRegisterMutation(MutationType):
+    __schema__ = gql(
+        """
+        type Mutation {
+            registerUser(
+                userName: String!,
+                email: String!,
+                admin: Boolean,
+            ): Boolean!
+        }
+        """
+    )
+    __args__ = {"userName": "username", "admin": "is_admin"}
+
+    @staticmethod
+    async def resolve_mutation(*_, username: str, email: str, is_admin: bool | None):
+        user = await create_user(
+            full_name=username,
+            email=email,
+            is_admin=bool(is_admin),
+        )
+        return bool(user)
+```
 
 
 ## `SubscriptionType`
@@ -723,6 +809,36 @@ class UserType(ObjectType):
 Use `__fields_args__ = convert_case` on type to automatically convert field arguments to python case in resolver kwargs:
 
 ```python
+from ariadne_graphql_modules import DeferredType, ObjectType, convert_case, gql
+
+from my_app.models import Article
+
+
+class SearchQuery(ObjectType):
+    __schema__ = gql(
+        """
+        type Query {
+            search(query: String!, includeDrafts: Boolean): [Article!]!
+        }
+        """
+    )
+    __fields_args__ = convert_case
+    __requires__ = [DeferredType("Article")]
+
+    @staticmethod
+    async def resolve_search(*_, query: str, include_drafts: bool | None):
+        articles = Article.query.search(query)
+        if not include_drafts:
+            articles = articles.filter(is_draft=False)
+        return await articles.all()
+```
+
+
+#### Converting mutation arguments
+
+Use `__args__ = convert_case` on `MutationType` to automatically convert input fields to python case in resolver kwargs:
+
+```python
 from ariadne_graphql_modules import MutationType, convert_case, gql
 
 from my_app import create_user
@@ -736,7 +852,7 @@ class UserRegisterMutation(MutationType):
         }
         """
     )
-    __fields_args__ = convert_case
+    __args__ = convert_case
 
     @staticmethod
     async def resolve_mutation(*_, full_name: str, email: str):
@@ -750,7 +866,7 @@ class UserRegisterMutation(MutationType):
 
 #### Converting inputs fields
 
-Use `__args__ = convert_case` on type to automatically convert input fields to python case in resolver kwargs:
+Use `__args__ = convert_case` on `InputType` to automatically convert input fields to python case in resolver kwargs:
 
 ```python
 from ariadne_graphql_modules import InputType, MutationType, convert_case, gql
