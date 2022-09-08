@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.6.0 (2022-09-08)
+
+- Added support for `__args__ = convert_case` for `MutationType`.
+- Changed `convert_case` to be less magic in its behavior.
+
+
 ## 0.5.0 (2022-07-03)
 
 - Implement missing logic for `ObjectType.__fields_args__`
