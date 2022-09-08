@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Type, Union, cast
+from typing import Callable, Dict, List, Optional, Type, Union, cast
 
 from graphql import (
     DefinitionNode,
@@ -13,12 +13,13 @@ from .dependencies import Dependencies, get_dependencies_from_object_type
 from .types import RequirementsDict
 from .utils import parse_definition
 
+MutationArgs = Dict[str, str]
 ObjectNodeType = Union[ObjectTypeDefinitionNode, ObjectTypeExtensionNode]
 
 
 class MutationType(BindableType):
     __abstract__ = True
-    __args__: Optional[Dict[str, str]] = None
+    __args__: Optional[Union[MutationArgs, Callable[..., MutationArgs]]] = None
 
     graphql_name = "Mutation"
     graphql_type: Union[Type[ObjectTypeDefinitionNode], Type[ObjectTypeExtensionNode]]
@@ -50,7 +51,12 @@ class MutationType(BindableType):
         dependencies = cls.__get_dependencies__(graphql_def)
         cls.__validate_requirements__(requirements, dependencies)
 
+        if callable(cls.__args__):
+            # pylint: disable=not-callable
+            cls.__args__ = cls.__args__(field_args=field)
+
         cls.__validate_args__(field)
+
         cls.__validate_resolve_mutation__()
 
     @classmethod
@@ -117,7 +123,7 @@ class MutationType(BindableType):
             return
 
         field_args = [arg.name.value for arg in field.arguments]
-        invalid_args = set(cls.__args__) - set(field_args)
+        invalid_args = set(cast(List[str], cls.__args__)) - set(field_args)
         if invalid_args:
             raise ValueError(
                 f"{cls.__name__} class was defined with args not on "

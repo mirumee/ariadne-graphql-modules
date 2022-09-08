@@ -39,7 +39,7 @@ class InputType(BindableType):
 
         if callable(cls.__args__):
             # pylint: disable=not-callable
-            cls.__args__ = cls.__args__(cls.graphql_fields)
+            cls.__args__ = cls.__args__(object_fields=cls.graphql_fields)
 
         cls.__validate_args__()
 

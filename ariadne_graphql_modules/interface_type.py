@@ -56,12 +56,12 @@ class InterfaceType(BindableType, ResolversMixin):
         cls.__validate_requirements__(requirements, dependencies)
 
         if callable(cls.__fields_args__):
-            cls.__fields_args__ = cls.__fields_args__(cls.graphql_fields, True)
+            cls.__fields_args__ = cls.__fields_args__(fields_args=cls.graphql_fields)
 
         cls.__validate_fields_args__()
 
         if callable(cls.__aliases__):
-            cls.__aliases__ = cls.__aliases__(cls.graphql_fields)
+            cls.__aliases__ = cls.__aliases__(object_fields=cls.graphql_fields)
 
         cls.__validate_aliases__()
         cls.resolvers = cls.__get_resolvers__()

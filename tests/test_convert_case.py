@@ -1,4 +1,4 @@
-from ariadne_graphql_modules import InputType, ObjectType, convert_case
+from ariadne_graphql_modules import InputType, MutationType, ObjectType, convert_case
 
 
 def test_cases_are_mapped_for_aliases():
@@ -103,4 +103,43 @@ def test_cases_are_mapped_for_fields_args_with_overrides():
         "otherField": {
             "thirdArg": "third_arg",
         },
+    }
+
+
+def test_cases_are_mapped_for_mutation_args():
+    class ExampleMutation(MutationType):
+        __schema__ = """
+        type Mutation {
+            field(arg: Int, secondArg: Int): Int
+        }
+        """
+        __args__ = convert_case
+
+        @staticmethod
+        def resolve_mutation(*_, **__):
+            return 42
+
+    assert ExampleMutation.__args__ == {"secondArg": "second_arg"}
+
+
+def test_cases_are_mapped_for_mutation_args_with_overrides():
+    class ExampleMutation(MutationType):
+        __schema__ = """
+        type Mutation {
+            field(arg: Int, secondArg: Int): Int
+        }
+        """
+        __args__ = convert_case(
+            {
+                "arg": "override",
+            }
+        )
+
+        @staticmethod
+        def resolve_mutation(*_, **__):
+            return 42
+
+    assert ExampleMutation.__args__ == {
+        "arg": "override",
+        "secondArg": "second_arg",
     }
