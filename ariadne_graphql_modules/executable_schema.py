@@ -1,6 +1,8 @@
-from typing import Dict, Iterable, List, Tuple, Type, cast
+from optparse import Option
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Type, Union, cast
 
 from ariadne import (
+    SchemaBindable,
     SchemaDirectiveVisitor,
     set_default_enum_values_on_schema,
     validate_schema_enum_values,
@@ -12,6 +14,7 @@ from graphql import (
     GraphQLSchema,
     NamedTypeNode,
     ObjectTypeDefinitionNode,
+    TypeDefinitionNode,
     assert_valid_schema,
     build_ast_schema,
     concat_ast,
@@ -27,19 +30,32 @@ ROOT_TYPES = ["Query", "Mutation", "Subscription"]
 
 def make_executable_schema(
     *types,
+    extra_sdl: Optional[Union[str, Sequence[str]]] = None,
+    extra_bindables: Optional[Sequence[SchemaBindable]] = None,
+    extra_directives: Optional[Dict[str, Type[SchemaDirectiveVisitor]]] = None,
     merge_roots: bool = True,
 ):
     all_types = get_all_types(types)
+    extra_defs = parse_extra_sdl(extra_sdl)
 
     type_defs: List[Type[DefinitionType]] = []
     for type_ in all_types:
         if issubclass(type_, DefinitionType):
             type_defs.append(type_)
 
-    validate_no_missing_definitions(all_types, type_defs)
+    validate_no_missing_definitions(all_types, type_defs, extra_defs)
 
-    schema = build_schema(type_defs, merge_roots)
+    schema = build_schema(type_defs, extra_defs, merge_roots)
+
+    if extra_bindables:
+        for bindable in extra_bindables:
+            bindable.bind_to_schema(schema)
+
     set_default_enum_values_on_schema(schema)
+
+    if extra_directives:
+        SchemaDirectiveVisitor.visit_schema_directives(schema, extra_directives)
+
     assert_valid_schema(schema)
     validate_schema_enum_values(schema)
     repair_default_enum_values(schema, type_defs)
@@ -58,9 +74,25 @@ def get_all_types(types: Iterable[Type[BaseType]]) -> List[Type[BaseType]]:
     return all_types
 
 
+def parse_extra_sdl(
+    extra_sdl: Optional[Union[str, Sequence[str]]]
+) -> List[TypeDefinitionNode]:
+    if not extra_sdl:
+        return []
+
+    if not isinstance(extra_sdl, str):
+        extra_sdl = "\n\n".join(extra_sdl)
+
+    return cast(
+        List[TypeDefinitionNode],
+        list(parse(cast(str, extra_sdl)).definitions),
+    )
+
+
 def validate_no_missing_definitions(
     all_types: List[Type[BaseType]],
     type_defs: List[Type[DefinitionType]],
+    extra_defs: List[TypeDefinitionNode],
 ):
     deferred_names: List[str] = []
     for type_ in all_types:
@@ -68,6 +100,8 @@ def validate_no_missing_definitions(
             deferred_names.append(type_.graphql_name)
 
     real_names = [type_.graphql_name for type_ in type_defs]
+    real_names += [definition.name.value for definition in extra_defs]
+
     missing_names = set(deferred_names) - set(real_names)
     if missing_names:
         raise ValueError(
@@ -77,14 +111,19 @@ def validate_no_missing_definitions(
 
 
 def build_schema(
-    type_defs: List[Type[DefinitionType]], merge_roots: bool = True
+    type_defs: List[Type[DefinitionType]],
+    extra_defs: List[TypeDefinitionNode],
+    merge_roots: bool = True,
 ) -> GraphQLSchema:
     schema_definitions: List[ast.DocumentNode] = []
     if merge_roots:
-        schema_definitions.append(build_root_schema(type_defs))
+        schema_definitions.append(build_root_schema(type_defs, extra_defs))
         for type_ in type_defs:
             if type_.graphql_name not in ROOT_TYPES or not merge_roots:
                 schema_definitions.append(parse(type_.__schema__))
+        for extra_type_def in extra_defs:
+            if extra_type_def.name.value not in ROOT_TYPES or not merge_roots:
+                schema_definitions.append(DocumentNode(definitions=(extra_type_def,)))
 
     ast_document = concat_ast(schema_definitions)
     schema = build_ast_schema(ast_document)
@@ -96,8 +135,14 @@ def build_schema(
     return schema
 
 
-def build_root_schema(type_defs: List[Type[DefinitionType]]) -> DocumentNode:
-    root_types: Dict[str, List[Type[DefinitionType]]] = {
+RootTypeDef = Tuple[str, DocumentNode]
+
+
+def build_root_schema(
+    type_defs: List[Type[DefinitionType]],
+    extra_defs: List[TypeDefinitionNode],
+) -> DocumentNode:
+    root_types: Dict[str, List[RootTypeDef]] = {
         "Query": [],
         "Mutation": [],
         "Subscription": [],
@@ -105,49 +150,54 @@ def build_root_schema(type_defs: List[Type[DefinitionType]]) -> DocumentNode:
 
     for type_def in type_defs:
         if type_def.graphql_name in root_types:
-            root_types[type_def.graphql_name].append(type_def)
+            root_types[type_def.graphql_name].append(
+                (type_def.__name__, parse(type_def.__schema__))
+            )
+
+    for extra_type_def in extra_defs:
+        if extra_type_def.name.value in root_types:
+            root_types[extra_type_def.name.value].append(
+                ("extra_sdl", DocumentNode(definitions=(extra_type_def,)))
+            )
 
     schema: List[DocumentNode] = []
-    for root_type_defs in root_types.values():
+    for root_name, root_type_defs in root_types.items():
         if len(root_type_defs) == 1:
-            schema.append(parse(root_type_defs[0].__schema__))
+            schema.append(root_type_defs[0][1])
         elif root_type_defs:
-            schema.append(merge_root_types(root_type_defs))
+            schema.append(merge_root_types(root_name, root_type_defs))
 
     return concat_ast(schema)
 
 
-def merge_root_types(type_defs: List[Type[DefinitionType]]) -> DocumentNode:
+def merge_root_types(root_name: str, type_defs: List[RootTypeDef]) -> DocumentNode:
     interfaces: List[NamedTypeNode] = []
     directives: List[ConstDirectiveNode] = []
-    fields: Dict[str, Tuple[FieldDefinitionNode, Type[DefinitionType]]] = {}
+    fields: Dict[str, Tuple[str, FieldDefinitionNode]] = {}
 
-    for type_ in type_defs:
-        type_definition = cast(
-            ObjectTypeDefinitionNode,
-            parse(type_.__schema__).definitions[0],
-        )
+    for type_source, type_def in type_defs:
+        type_definition = cast(ObjectTypeDefinitionNode, type_def.definitions[0])
         interfaces.extend(type_definition.interfaces)
         directives.extend(type_definition.directives)
 
         for field_def in type_definition.fields:
             field_name = field_def.name.value
             if field_name in fields:
-                other_type_name = fields[field_name][1].__name__
+                other_type_source = fields[field_name][0]
                 raise ValueError(
-                    f"Multiple {type_.graphql_name} types are defining same field "
-                    f"'{field_name}': {other_type_name}, {type_.__name__}"
+                    f"Multiple {root_name} types are defining same field "
+                    f"'{field_name}': {other_type_source}, {type_source}"
                 )
 
-            fields[field_name] = (field_def, type_)
+            fields[field_name] = (type_source, field_def)
 
     merged_definition = ast.ObjectTypeDefinitionNode()
     merged_definition.name = ast.NameNode()
-    merged_definition.name.value = type_defs[0].graphql_name
+    merged_definition.name.value = root_name
     merged_definition.interfaces = tuple(interfaces)
     merged_definition.directives = tuple(directives)
     merged_definition.fields = tuple(
-        fields[field_name][0] for field_name in sorted(fields)
+        fields[field_name][1] for field_name in sorted(fields)
     )
 
     merged_document = DocumentNode()
