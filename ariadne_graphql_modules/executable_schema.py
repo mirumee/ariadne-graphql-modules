@@ -1,4 +1,3 @@
-from optparse import Option
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Type, Union, cast
 
 from ariadne import (

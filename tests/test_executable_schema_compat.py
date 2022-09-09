@@ -34,7 +34,7 @@ def test_old_schema_definition_is_executable():
     user_type = OldObjectType("User")
 
     @user_type.field("score")
-    def resolve_user_score(user, info):
+    def resolve_user_score(user, _):
         return user["id"] * 7
 
     schema = make_executable_schema(
@@ -89,7 +89,7 @@ def test_old_schema_depending_on_new_types_is_executable():
         )
 
         @staticmethod
-        def resolve_score(user, info):
+        def resolve_score(user, _):
             return user["id"] * 7
 
     schema = make_executable_schema(
@@ -145,7 +145,7 @@ def test_new_schema_depending_on_old_types_is_executable():
     user_type = OldObjectType("User")
 
     @user_type.field("score")
-    def resolve_user_score(user, info):
+    def resolve_user_score(user, _):
         return user["id"] * 7
 
     schema = make_executable_schema(
@@ -192,7 +192,7 @@ def test_old_and_new_roots_can_be_combined():
         )
 
         @staticmethod
-        def resolve_score(user, info):
+        def resolve_score(user, _):
             return user["id"] * 7
 
     class NewQueryType(ObjectType):
