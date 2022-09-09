@@ -29,10 +29,10 @@ ROOT_TYPES = ["Query", "Mutation", "Subscription"]
 
 def make_executable_schema(
     *types,
+    merge_roots: bool = True,
     extra_sdl: Optional[Union[str, Sequence[str]]] = None,
     extra_bindables: Optional[Sequence[SchemaBindable]] = None,
     extra_directives: Optional[Dict[str, Type[SchemaDirectiveVisitor]]] = None,
-    merge_roots: bool = True,
 ):
     all_types = get_all_types(types)
     extra_defs = parse_extra_sdl(extra_sdl)

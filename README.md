@@ -325,6 +325,13 @@ type Query {
 Fields on final type will be ordered alphabetically.
 
 
+## Updating from Ariadne
+
+Ariadne GraphQL Modules support combining old and new approaches to schema definition.
+
+See [upgrading guide](./UPGRADING.md) for examples and details.
+
+
 ## Contributing
 
 We are welcoming contributions to Ariadne GraphQL Modules! If you've found a bug or issue, feel free to use [GitHub issues](https://github.com/mirumee/ariadne/issues). If you have any questions or feedback, please let us know via [GitHub discussions](https://github.com/mirumee/ariadne/discussions/).

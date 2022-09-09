@@ -757,8 +757,11 @@ Extends `DefinitionType`.
 
 ```python
 def make_executable_schema(
-    *types: BaseType, 
+    *types: BaseType,
     merge_roots: bool = True,
+    extra_sdl: Optional[Union[str, Sequence[str]]] = None,
+    extra_bindables: Optional[Sequence[SchemaBindable]] = None,
+    extra_directives: Optional[Dict[str, Type[SchemaDirectiveVisitor]]] = None,
 ) -> GraphQLSchema:
     ...
 ```
@@ -808,6 +811,33 @@ type Query {
 ```
 
 When `merge_roots=False` is explicitly set, `make_executable_schema` will raise an GraphQL error that `type Query` is defined more than once.
+
+
+### `extra_sdl`
+
+String or list of strings containing extra SDL to append in created schema. Optional.
+
+Used when migrating to Ariadne GraphQL Modules approach from existing schema definition.
+
+See [upgrading guide](./UPGRADING.md) for examples and details.
+
+
+### `extra_bindables`
+
+List of Ariadne's bindables. Optional.
+
+Used when migrating to Ariadne GraphQL Modules approach from existing schema definition.
+
+See [upgrading guide](./UPGRADING.md) for examples and details.
+
+
+### `extra_directives`
+
+Dict of Ariadne's directives names and implementation. Optional
+
+Used when migrating to Ariadne GraphQL Modules approach from existing schema definition.
+
+See [upgrading guide](./UPGRADING.md) for examples and details.
 
 
 ## `convert_case`
