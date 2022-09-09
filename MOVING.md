@@ -1,5 +1,5 @@
-Upgrading guide
-===============
+Moving guide
+============
 
 `make_executable_schema` provided by Ariadne GraphQL Modules supports combining old and new approaches for schema definition. This allows developers using either to make a switch.
 
