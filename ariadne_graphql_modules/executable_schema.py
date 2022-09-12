@@ -1,4 +1,15 @@
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Type, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 from ariadne import (
     SchemaBindable,
@@ -28,14 +39,15 @@ ROOT_TYPES = ["Query", "Mutation", "Subscription"]
 
 
 def make_executable_schema(
-    *types,
+    *args: Union[Type[BaseType], SchemaBindable, str],
     merge_roots: bool = True,
-    extra_sdl: Optional[Union[str, Sequence[str]]] = None,
-    extra_bindables: Optional[Sequence[SchemaBindable]] = None,
     extra_directives: Optional[Dict[str, Type[SchemaDirectiveVisitor]]] = None,
 ):
-    all_types = get_all_types(types)
-    extra_defs = parse_extra_sdl(extra_sdl)
+    all_types = get_all_types(args)
+    extra_defs = parse_extra_sdl(args)
+    extra_bindables: List[SchemaBindable] = [
+        arg for arg in args if isinstance(arg, SchemaBindable)
+    ]
 
     type_defs: List[Type[DefinitionType]] = []
     for type_ in all_types:
@@ -64,27 +76,31 @@ def make_executable_schema(
     return schema
 
 
-def get_all_types(types: Iterable[Type[BaseType]]) -> List[Type[BaseType]]:
+def get_all_types(
+    args: Sequence[Union[Type[BaseType], SchemaBindable, str]]
+) -> List[Type[BaseType]]:
     all_types: List[Type[BaseType]] = []
-    for leaf_type in types:
-        for child_type in leaf_type.__get_types__():
+    for arg in args:
+        if isinstance(arg, (str, SchemaBindable)):
+            continue  # Skip args of unsupported types
+
+        for child_type in arg.__get_types__():
             if child_type not in all_types:
                 all_types.append(child_type)
     return all_types
 
 
 def parse_extra_sdl(
-    extra_sdl: Optional[Union[str, Sequence[str]]]
+    args: Sequence[Union[Type[BaseType], SchemaBindable, str]]
 ) -> List[TypeDefinitionNode]:
-    if not extra_sdl:
+    sdl_strings: List[str] = [cast(str, arg) for arg in args if isinstance(arg, str)]
+    if not sdl_strings:
         return []
 
-    if not isinstance(extra_sdl, str):
-        extra_sdl = "\n\n".join(extra_sdl)
-
+    extra_sdl = "\n\n".join(sdl_strings)
     return cast(
         List[TypeDefinitionNode],
-        list(parse(cast(str, extra_sdl)).definitions),
+        list(parse(extra_sdl).definitions),
     )
 
 
