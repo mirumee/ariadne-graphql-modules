@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.7.0 (UNRELEASED)
+
+- Added support for Ariadne schema definitions to `make_executable_schema`.
+
+
 ## 0.6.0 (2022-09-08)
 
 - Added support for `__args__ = convert_case` for `MutationType`.
