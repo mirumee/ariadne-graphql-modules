@@ -37,9 +37,7 @@ def test_old_schema_definition_is_executable():
     def resolve_user_score(user, _):
         return user["id"] * 7
 
-    schema = make_executable_schema(
-        extra_sdl=type_defs, extra_bindables=[query_type, user_type]
-    )
+    schema = make_executable_schema(type_defs, query_type, user_type)
 
     _, result = graphql_sync(schema, {"query": "{ random user { id name score } }"})
     assert result == {
@@ -92,9 +90,7 @@ def test_old_schema_depending_on_new_types_is_executable():
         def resolve_score(user, _):
             return user["id"] * 7
 
-    schema = make_executable_schema(
-        UserType, extra_sdl=type_defs, extra_bindables=[query_type]
-    )
+    schema = make_executable_schema(UserType, type_defs, query_type)
 
     _, result = graphql_sync(schema, {"query": "{ random user { id name score } }"})
     assert result == {
@@ -148,9 +144,7 @@ def test_new_schema_depending_on_old_types_is_executable():
     def resolve_user_score(user, _):
         return user["id"] * 7
 
-    schema = make_executable_schema(
-        QueryType, extra_sdl=type_defs, extra_bindables=[user_type]
-    )
+    schema = make_executable_schema(QueryType, type_defs, user_type)
 
     _, result = graphql_sync(schema, {"query": "{ random user { id name score } }"})
     assert result == {
@@ -212,9 +206,7 @@ def test_old_and_new_roots_can_be_combined():
                 "name": "Alice",
             }
 
-    schema = make_executable_schema(
-        NewQueryType, extra_sdl=type_defs, extra_bindables=[query_type]
-    )
+    schema = make_executable_schema(NewQueryType, type_defs, query_type)
 
     _, result = graphql_sync(schema, {"query": "{ random user { id name score } }"})
     assert result == {

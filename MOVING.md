@@ -8,9 +8,6 @@ Moving guide
 
 To be able to mix old and new approaches in your implementation, replace `make_executable_schema` imported from `ariadne` with one from `ariadne_graphql_modules`:
 
-- Move String (or strings) with your schema SDL from first argument to `extra_sdl` option.
-- Gather Bindables in a list and move them to `extra_bindables` option. 
-
 Old code:
 
 ```python
@@ -30,10 +27,23 @@ from ariadne_graphql_modules import make_executable_schema
 type_defs = load_schema_from_path("schema.graphql")
 
 schema = make_executable_schema(
-    extra_sdl=type_defs,
-    extra_bindables=[type_a, type_b, type_c],
+    type_defs, type_a, type_b, type_c,
 )
 ```
+
+If you are passing `type_defs` or types as lists (behavior supported by `ariadne.make_executable_schema`), you'll need to unpack them before passing:
+
+```python
+from ariadne import load_schema_from_path
+from ariadne_graphql_modules import make_executable_schema
+
+type_defs = load_schema_from_path("schema.graphql")
+
+schema = make_executable_schema(
+    type_defs, type_a, *user_types,
+)
+```
+
 
 If you are using directives, `directives` option is named `extra_directives` in new function:
 
@@ -44,8 +54,7 @@ from ariadne_graphql_modules import make_executable_schema
 type_defs = load_schema_from_path("schema.graphql")
 
 schema = make_executable_schema(
-    extra_sdl=type_defs,
-    extra_bindables=[type_a, type_b, type_c],
+    type_defs, type_a, type_b, type_c,
     extra_directives={"date": MyDateDirective},
 )
 ```
@@ -113,7 +122,7 @@ class UserType(ObjectType):
 
 
 schema = make_executable_schema(
-    UserType, extra_sdl=type_defs, extra_bindables=[query_type]
+    UserType, type_defs, query_type
 )
 ```
 
@@ -156,7 +165,7 @@ class NewQueryType(ObjectType):
 
 
 schema = make_executable_schema(
-    NewQueryType, extra_sdl=type_defs, extra_bindables=[query_type]
+    NewQueryType, type_defs, query_type
 )
 ```
 
