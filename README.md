@@ -329,7 +329,7 @@ Fields on final type will be ordered alphabetically.
 
 Ariadne GraphQL Modules support combining old and new approaches to schema definition.
 
-See [moving guide](./moving.md) for examples and details.
+See [moving guide](./MOVING.md) for examples and details.
 
 
 ## Contributing
