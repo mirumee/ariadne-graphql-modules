@@ -1,6 +1,0 @@
-black
-mypy
-pylint
-pytest
-pytest-asyncio
-snapshottest
