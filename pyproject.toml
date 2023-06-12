@@ -1,6 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ariadne-graphql-modules"
+version = "0.7.0"
+description = "Ariadne toolkit for defining GraphQL schemas in modular fashion."
+authors = [{ name = "Mirumee Software", email = "hello@mirumee.com" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "ariadne>=0.15.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "black",
+  "mypy",
+  "pylint",
+  "pytest",
+  "pytest-asyncio",
+  "snapshottest",
+]
+
+[project.urls]
+"Homepage" = "https://ariadnegraphql.org/"
+"Repository" = "https://github.com/mirumee/ariadne-graphql-modules"
+"Bug Tracker" = "https://github.com/mirumee/ariadne-graphql-modules/issues"
+"Community" = "https://github.com/mirumee/ariadne/discussions"
+"Twitter" = "https://twitter.com/AriadneGraphQL"
+
+[tool.hatch.build]
+include = [
+  "ariadne_graphql_modules/**/*.py",
+  "ariadne_graphql_modules/py.typed",
+]
+exclude = [
+  "tests",
+]
+
+[tool.hatch.envs.default]
+features = ["test"]
+
 [tool.black]
 line-length = 88
-target-version = ['py36', 'py37', 'py38']
+target-version = ["py38", "py39", "py310", "py311"]
 include = '\.pyi?$'
 exclude = '''
 /(
