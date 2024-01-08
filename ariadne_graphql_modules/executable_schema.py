@@ -12,8 +12,8 @@ from typing import (
 from ariadne import (
     SchemaBindable,
     SchemaDirectiveVisitor,
-    set_default_enum_values_on_schema,
-    validate_schema_enum_values,
+    repair_schema_default_enum_values,
+    validate_schema_default_enum_values,
 )
 from graphql import (
     ConstDirectiveNode,
@@ -60,14 +60,12 @@ def make_executable_schema(
         for bindable in extra_bindables:
             bindable.bind_to_schema(schema)
 
-    set_default_enum_values_on_schema(schema)
-
     if extra_directives:
         SchemaDirectiveVisitor.visit_schema_directives(schema, extra_directives)
 
     assert_valid_schema(schema)
-    validate_schema_enum_values(schema)
-    repair_default_enum_values(schema, type_defs)
+    validate_schema_default_enum_values(schema)
+    repair_schema_default_enum_values(schema)
 
     add_directives_to_schema(schema, type_defs)
 
