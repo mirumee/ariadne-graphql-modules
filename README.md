@@ -21,7 +21,7 @@ Ariadne GraphQL Modules can be installed using pip:
 pip install ariadne-graphql-modules
 ```
 
-Ariadne 0.15 or later is required for library to work.
+Ariadne 0.22 or later is required for library to work.
 
 
 ## Examples
