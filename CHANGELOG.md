@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.8.0 (2024-02-21)
+
+- Added support for Ariadne 0.22.
+
+
 ## 0.7.0 (2022-09-13)
 
 - Added support for Ariadne schema definitions to `make_executable_schema`.

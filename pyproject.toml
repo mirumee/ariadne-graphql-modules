@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ariadne-graphql-modules"
-version = "0.7.0"
+version = "0.8.0"
 description = "Ariadne toolkit for defining GraphQL schemas in modular fashion."
 authors = [{ name = "Mirumee Software", email = "hello@mirumee.com" }]
 readme = "README.md"
@@ -22,7 +22,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "ariadne>=0.15.0",
+  "ariadne>=0.22.0",
 ]
 
 [project.optional-dependencies]
