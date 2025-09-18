@@ -339,4 +339,4 @@ We are welcoming contributions to Ariadne GraphQL Modules! If you've found a bug
 Also make sure you follow [@AriadneGraphQL](https://twitter.com/AriadneGraphQL) on Twitter for latest updates, news and random musings!
 
 **Crafted with ❤️ by [Mirumee Software](http://mirumee.com)**
-hello@mirumee.com
+ariadne@mirumee.com

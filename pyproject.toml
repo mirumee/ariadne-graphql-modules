@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ariadne-graphql-modules"
 version = "0.8.0"
 description = "Ariadne toolkit for defining GraphQL schemas in modular fashion."
-authors = [{ name = "Mirumee Software", email = "hello@mirumee.com" }]
+authors = [{ name = "Mirumee Software", email = "ariadne@mirumee.com" }]
 readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = [
